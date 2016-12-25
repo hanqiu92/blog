@@ -1,0 +1,70 @@
+---
+title: 'Integer Programming Note IV: Cuts'
+categories: Lecture Notes
+tags:
+- Integer Programming
+mathjax: true
+date: 2016-10-04 12:05:00
+---
+
+Cuts are important tools to strengthen your formulation and improve computation efficiency. In this post, I will introduce two kind of cuts: geometric cuts, which consider the geometric property of the polyhedron and have general application, and implicit cuts, which are more problem specific but potentially can lead to very strong formulation.
+
+<!--more-->
+
+## Geometric cuts: Gomory cut and split cut
+
+Assume that we are given $P=\\{x\in Z^n: Ax\leqslant b\\}$ with $A\in R^{m\times n}$ and $b\in R^m$. If we can find a hyperplane $\\{x: c^Tx\leqslant d\\}\supseteq P$ with $c\in Z^n$ and $d\notin Z$, based on the integrality we immediately know $\\{x: c^Tx\leqslant \lfloor d \rfloor\\}$ is also a valid constraint for $P$. Sometimes (e.g. extreme point is not integral and the local boundary is not very flat), adding proper Gomory cuts can lead to much stronger formulation.
+
+Notice that by Farkas' lemma, $\\{x: c^Tx\leqslant d\\}\supseteq P$ is equivalent to $\exists \mu\in R^m\_+$ s.t. $c=A^T\mu, d\geqslant b^T\mu$. So a general idea to construct Gomory cut is to find $\mu\in R^m\_+$ s.t. $A^T\mu\in Z^n$, and add cut
+
+$$\mu^TAx\leqslant \lfloor \mu^Tb \rfloor.$$
+
+For mixed integer case $P=\\{(x,y)\in Z^{n\_1}\times R^{n\_2} : Ax+By\leqslant b\\}$, again by Farkas' lemma all valid cuts (for the LP relaxation) are in form
+
+$$\mu^TAx+\mu^TBy\leqslant \mu^Tb$$
+
+for some $\mu\in R^m\_+$. A way to avoid the messy continuous variables $y$ is to focus on $\mu$ s.t. $\mu^TB=0$. That is, in case of $\mu\in R^m\_+: \mu^TB=0, \mu^TA\in R^n$, we have
+
+$$\mu^TAx\leqslant \lfloor \mu^Tb \rfloor.$$
+
+Gomory cut only considers improvement on the boundary. Split cut takes a step ahead by splitting the polyhedron into two (or more) and construct shared boundary cut (or even Gomory cut) for both parts. Again, consider mixed integer case: $P=\\{(x,y)\in Z^{n\_1}\times R^{n\_2} : Ax+By\leqslant b\\}$ with $A\in R^{m\times n\_1}, B\in R^{m\times n\_2}, b\in R^m$. We first use split $\Pi x\leqslant \Pi\_0$ and $\Pi x\geqslant \Pi\_0+1$ with $\Pi\in Z^{n\_1}$ and $\Pi\_0\in Z$ to separate $P$. Then, by Farkas' lemma, a valid cut $ c^Tx+d^Ty\leqslant h$ for system $Ax+By\leqslant b, \Pi x\leqslant \Pi\_0$ is in form
+
+$$\begin{aligned} \begin{pmatrix} A^T& \Pi^T\\\\ B^T& 0 \end{pmatrix} \begin{pmatrix}\mu \\\\ \alpha \end{pmatrix} & = \begin{pmatrix}c \\\\ d \end{pmatrix} \\\\ \begin{pmatrix} b^T& \Pi\_0 \end{pmatrix} \begin{pmatrix}\mu \\\\ \alpha \end{pmatrix} & \leqslant  h \end{aligned} $$
+
+with $\mu \in R^m\_+$ and $\alpha \in R\_+$. Similarly, for the other system, the same cut should satisfy
+
+$$\begin{aligned} \begin{pmatrix} A^T& -\Pi^T\\\\ B^T& 0 \end{pmatrix} \begin{pmatrix}\lambda \\\\ \beta \end{pmatrix} & = \begin{pmatrix}c \\\\ d \end{pmatrix} \\\\ \begin{pmatrix} b^T& -\Pi\_0-1 \end{pmatrix} \begin{pmatrix}\lambda \\\\ \beta \end{pmatrix} & \leqslant  h \end{aligned} $$
+
+with $\lambda \in R^m\_+$ and $\beta \in R\_+$. And the remaining task is to find non-negative $\alpha,\beta,\mu,\lambda$ that satisfy above equations.
+
+Following same ideas, these geometric cuts can also be extended to nonlinear settings, even though the formulations are usually more complex. But if you have a good outer approximation (which will be introduced in next post), above characterization can again be applied.
+
+## Implicit cuts
+
+For many problems (especially combinatoric ones), we can construct simple formulations easily, but these formulations are usually weak. One possible problem is that the formulation is constructed in aggregate level and has to use a large big-$M$. For example, consider single source fixed charge uncapacitated multi-commodity flow problem. Assume root source $r$ has outflow $f\_r$ and sink $s\_i$ has inflow $f\_{s\_i}$, and if an arc $(u,v)$ has positive flow, there is a fixed charge $c\_{uv}$. Now, it seems straightforward to use continuous variables $y\_{uv}$ to model the flow in arc $(u,v)$ and binary variables $x\_{uv}$ to model whether there is positive flow. Unfortunately, in this case the connection between $y\_{uv}$ and $x\_{uv}$ is weak:
+
+$$y\_{uv}\leqslant |f\_r|x\_{uv}.$$
+
+An easy way to strengthen this formulation is to decompose each $y\_{uv}$ into sum of $y\_{uv}^i$, which is the flow in arc $(u,v)$ for pair $(r,s\_i)$. Then we have much stronger bound on $x\_{uv}$:
+
+$$y\_{uv}^i\leqslant |f\_{s\_i}|x\_{uv}, \forall i.$$
+
+Such decomposition technique can be applied to a wide range of combinatorial problems.
+
+Another technique I want to discuss is to impose redundancy. Assume you have a problem in $P=\\{x: Ax\leqslant b, f(x)\leqslant g\\}$. If you have an good (e.g., ideal) extended formulation for $\\{f(x)\leqslant g\\}$, it will be beneficial to add some redundant cut based on $\\{Ax\leqslant b\\}$ and auxillary variables $y$. For example, suppose for variables $x\_{ij}\in\\{0,1\\}$ and $p\_k\in [0,1]$, we want to use auxiliary variables $u\_{ijk}$ to model $x\_{ij}p\_k$ with constraints $\sum\_j x\_{ij}\leqslant 1$. An ideal formulation of $u\_{ijk}$ is
+
+$$\begin{aligned} 0\leqslant u\_{ijk}\leqslant p\_k\\\\ p\_k+x\_{ij}-1\leqslant u\_{ijk}\leqslant x\_{ij} \end{aligned}$$
+
+Then, by multiplying $p_k$ and $1-p_k$ to $\sum\_j x\_{ij}\leqslant 1$, we have redundant cuts
+
+$$\begin{aligned} \sum\_j u\_{ijk}&\leqslant p\_k\\\\  \sum\_ju\_{ijk}-\sum\_j x\_{ij}&\geqslant p\_k-1 \end{aligned}$$
+
+Clearly, these "redundant" cuts are much stronger than the locally ideal formulation above.
+
+Generally, such cuts will work well if $\\{x: Ax\leqslant b\\}$ is significantly tighter than $\\{x: f(x)\leqslant g\\}$ and the ranges of auxiliary variables $y$ depend on $x$, since these redundant cuts can effectively restrict the ranges of auxiliary variables, comparing with simple intersection of $\\{x: Ax\leqslant b\\}$ and ideal formulation of $\\{x: f(x)\leqslant g\\}$.
+
+## Reference
+
+Vanderbeck, F., & Wolsey, L. A. (2010). Reformulation and decomposition of integer programs. In 50 Years of Integer Programming 1958-2008 (pp. 431-502). Springer Berlin Heidelberg.
+
+Tawarmalani, M., Ahmed, S., & Sahinidis, N. V. (2002). Global optimization of 0-1 hyperbolic programs. Journal of Global Optimization, 24(4), 385-416.
