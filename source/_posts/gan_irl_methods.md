@@ -1,0 +1,133 @@
+---
+title: 'A Discussion on GAN-based IRL methods'
+categories: Reflection
+tags:
+- Reinforcement Learning
+- Behavior Modeling
+mathjax: true
+date: 2018-08-31 12:06:00
+---
+
+## Introduction
+
+Inverse reinforcement learning (IRL) is the dual of reinforcement learning (RL) and aims at recovering the reward function that the agent optimizes with. Compared with supervised learning (behavior cloning, BC), IRL imposes more restrictive regularity conditions on the set of policies and is more appropriate in cases with inadequate expert demonstrations and for robust estimations. For example, consider a routing problem on a grid network: the optimal actions taken by the agent are geographically correlated. In this case, compared with BC, IRL has a higher chance of recovering the internal reward structure and leads to more consistent actions across space.
+
+In this post, I will briefly introduce several recent works using the generative adversarial network (GAN) for IRL and discuss their connections.
+
+<!--more-->
+
+## Equivalence of IRL formulations
+
+In the literature, there are two IRL formulations:
+
+$$\min\_r [\max\_{\pi} E\_{\rho\_{\pi}} (r(s,a) - \log(a|s)) - E\_{\rho\_{\pi\_E}} r(s,a)],$$
+
+or
+
+$$\max\_r E\_{\rho\_{\pi\_E}} \log p(a|s),$$
+
+where $\rho\_{\pi}(s,a)$ in the first formulation is the expected (discounted) occurrence of state-action $(s,a)$ pair when we sample with policy $\pi$ and in the second formulation refers to the sampling process of the expert demonstrations, and $p(a|s)$ is the action choice probability under the assumption that $\pi\_E$ follows the entropy-regularized optimal policy. The first formulation above means that we should find a reward $r$ such that the expected total value from expert policy $\pi_E$ is closest to the entropy-regularized optimal policy $\pi_H$, while the second formulation is to maximize the log likelihood of expert demonstrations with $r$. Next, we show that the two formulations are equivalent when the two sampling processes $\rho$ are consistent (this seems trivial but DO have important implications in how each paper builds up their specific IRL algorithms).
+
+Assume we are given with some reward function $r$. We denote the value function under the entropy-regularized optimal policy as $V$; that is, we have
+
+$$\max\_{\pi} E\_{\rho\_{\pi}} (r(s,a) - \log p(a|s)) = \sum_s p_0(s) V(s).$$
+
+Now, we can show that
+
+$$\begin{aligned} Q(s,a) & = r(s,a) + \gamma \sum_{s'} p(s'|s,a) V(s') \\\\
+e^{V(s)} & = \sum_a e^{Q(s,a)} \\\\
+p(a|s) & = e^{Q(s,a) - V(s)}, \end{aligned}$$
+
+where $\gamma$ is the discount factor. Such characterization is also available in Ziebart (2010).
+
+(Note: If one is familiar with discrete choice modeling, she will find that the form of dynamic MNL model is quite similar with the above characterization of entropy-regularized optimal action.)
+
+So if $\pi\_E$ follows the entropy-regularized optimal policy, we have
+
+$$\begin{aligned} E\_{\rho\_{\pi\_E}} \log p(a|s) & = E\_{\rho\_{\pi\_E}} Q(a,s) - E\_{\rho\_{\pi\_E}} V(s) \\\\
+& = E\_{\rho\_{\pi\_E}} r(a,s) + \gamma E\_{\rho\_{\pi\_E}} \sum\_{s'} p(s'|s,a) V(s') - E\_{\rho\_{\pi\_E}} V(s). \\\\ \end{aligned}$$
+
+Therefore, we remain to show that
+
+$$\gamma E\_{\rho\_{\pi\_E}} \sum\_{s'} p(s'|s,a) V(s') - E\_{\rho\_{\pi\_E}} V(s) = -\sum_s p_0(s) V(s)$$
+
+when the $\rho\_E$ in the two formulations refer to the same thing. The major implication of such equivalence is that the expert demonstrations should be sampled exactly as dictated by the expected discounted occurrence. Why is this so important? Notice that when the problem under discussion is an infinite time MDP, we cannot sample each single expert trajectory into distant future and there must be some stopping mechanisms. The above equivalence restricts our choices: we should stop according to the discount factor $\gamma$. That is, for each sampled trajectory $\tau$ with length $T+1$ (a $(s,a)$ pair is of length $1$), we have probability
+
+$$p(\tau) = (1-\gamma) \gamma^T p\_0(s\_0)\pi\_E(a\_0|s\_0) p(s\_1|s\_0,a\_0)\cdots p(s\_T|s\_{T-1},a\_{T-1})\pi\_E(a\_T|s\_T).$$
+
+The expected discounted occurrence of state-action pair $(s,a)$, in both formulations, is the same as
+
+$$\rho\_{\pi\_E}(s,a) = \sum\_{T}\sum\_{\tau:l(\tau)=T,\tau\_{-1} = (s,a)} p(\tau),$$
+
+where $l(\tau)$ is the length of the trajectory $\tau$ and $\tau\_{-1}$ is the last state-action pair in the trajectory. If we further define $p(\tau,s) = \gamma p(\tau)p(s|\tau\_{-1})$ for $l(\tau) > 0$ and $p(\tau,s) = p_0(s)$ for for $l(\tau) = 0$, we have, on one hand,
+
+$$\begin{aligned}\gamma E\_{\rho\_{\pi\_E}} \sum\_{s'} p(s'|s,a) V(s') & = \gamma \sum\_{s,a} \sum\_{T > 0}\sum\_{\tau:l(\tau)=T,\tau\_{-1} = (s,a)} p(\tau) \sum\_{s'} p(s'|s,a) V(s') \\\\
+& = \sum\_{s,a} \sum\_{T > 0}\sum\_{\tau:l(\tau)=T,\tau\_{-1} = (s,a)}\sum\_{s'} p(\tau,s') V(s')\\\\
+& = \sum\_{s'}\sum\_{T > 0}\sum\_{\tau:l(\tau)=T} p(\tau,s') V(s'), \end{aligned}$$
+
+and, on the other hand,
+
+$$\begin{aligned}E\_{\rho\_{\pi\_E}} V(s) & = \sum\_{s,a} \sum\_{T > 0}\sum\_{\tau:l(\tau)=T,\tau\_{-1} = (s,a)} p(\tau) V(s) \\\\
+& = \sum\_{s} \sum\_{T > 0}\sum\_{\tau:l(\tau)=T-1}p(\tau,s)\sum\_{a} \pi\_E(a|s)  V(s) \\\\
+& = \sum\_{s} \sum\_{T > 0}\sum\_{\tau:l(\tau)=T-1} p(\tau,s) V(s) \\\\
+& = \sum\_{s} \sum\_{T \geq 0}\sum\_{\tau:l(\tau)=T} p(\tau,s) V(s). \end{aligned}$$
+
+Therefore, we have
+
+$$\gamma E\_{\rho\_{\pi\_E}} \sum\_{s'} p(s'|s,a) V(s') - E\_{\rho\_{\pi\_E}} V(s) = -\sum\_{s} \sum\_{\tau:l(\tau)=0} p(\tau,s) V(s) = -\sum_s p_0(s) V(s). $$
+
+Now we have shown that the (min-max) performance gap formulation and the maximum log likelihood formulation are consistent. Next, we illustrate how to obtain a GAN-based IRL method with the min-max formulation.
+
+## A GAN-based IRL method
+
+Assume in the min-max formulation, the inner problem is solved by RL and we have the entropy-regularized optimal policy $\pi_H$ for some $r$. For the outer problem
+
+$$\min\_r E\_{\rho\_{\pi\_H}} r(s,a) - E\_{\rho\_{\pi\_E}} r(s,a),$$
+
+If we consider transformation $D(s,a) = \sigma (r(s,a) - \log\pi_H(a|s)) \in (0,1)$ with $\sigma$ being the sigmoid function, the equation above can be written as
+
+$$\min\_r E\_{\rho\_{\pi\_H}} [\log D(s,a) - \log(1 - D(s,a))] - E\_{\rho\_{\pi\_E}} [\log D(s,a) - \log(1 - D(s,a))],$$
+
+or
+
+$$\max\_D [E\_{\rho\_{\pi\_H}} \log(1 - D(s,a)) + E\_{\rho\_{\pi\_E}} \log D(s,a)] - [E\_{\rho\_{\pi\_H}} \log D(s,a) + E\_{\rho\_{\pi\_E}} (1 - \log D(s,a))].$$
+
+The whole thing is hard to optimize, and we can drop the last part and only maximize
+
+$$E\_{\rho\_{\pi\_H}} \log(1 - D(s,a)) + E\_{\rho\_{\pi\_E}} \log D(s,a).$$
+
+Now we recover the GAIL method (Ho & Ermon (2016)) and AIRL method (Fu et al. (2017))! In fact, with the min-max structure, we can iterate between finding the optimal $\pi_H$ and the best discriminator $D$; this is what we mean by "GAN-based".
+
+Now we finally have enough knowledge to comment on some recent works on GAN-based IRL methods.
+
+## Discussion
+
+Ho & Ermon (2016) is the first to "rediscover" the duality between RL and IRL and show that RL under IRL leads to a policy that matches the expected discounted occurrence $\rho$ with the expert demonstrations $\pi_E$ under some regularization $\psi$. They then choose a specific $\psi$ which reduces the occurrence matching problem to the above binary classification problem. However, in GAIL the RL step finds a policy with respect to $r = \log D$, while in our's and AIRL the reward is $r = \log D - \log (1 - D)$. Such difference comes from the fact that GAIL actually is not an IRL method and the quasi-reward $r = \log D$ is only used as a helper to obtain policy $\pi$.
+
+Two later works, Finn et al. (2016) and Fu et al. (2017), do develop IRL methods; but their theoretical developments are problematic. They try to tackle the problem from the max log likelihood side, but directly assume that trajectory $\tau$ has the probability
+
+$$p(\tau) \propto e^{\sum_t \gamma^t r(s_t,a_t)}.$$
+
+If we look at the form of the value function $V$ above or read Ziebart (2010) carefully, we should see that this assumption is consistent with the entropy-regularized optimal behavior only when the underlying MDP is deterministic and has no discount ($\gamma = 1$). Therefore, their setup is more likely to assume that the expert follows the entropy-regularized myopic behavior $\pi'$. (This might be the reality, though.)
+
+Finally, I will go through the development of AIRL as there is much ambiguity in the original paper. They first show that the gradient to the LL is
+
+$$E\_{\rho\_{\pi\_E}} \partial r(s,a) - E\_{\rho\_{\pi'}} \partial r(s,a),$$
+
+and then consider the following approximation
+
+$$\begin{aligned}E\_{\rho\_{\pi'}} \partial r(s,a) & = E\_{0.5\rho\_{\pi\_H} + 0.5\rho\_{\pi\_E}} \frac{\rho\_{\pi'}}{0.5\rho\_{\pi\_H} + 0.5\rho\_{\pi\_E}}\partial r(s,a) \\\\
+& \approx E\_{0.5\rho\_{\pi\_H} + 0.5\rho\_{\pi\_E}} \frac{\rho\_{\pi'}}{0.5\rho\_{\pi\_H} + 0.5\rho\_{\pi'}}\partial r(s,a).\end{aligned}$$
+
+This then leads to the above binary classification formulation. We can now see that in our development, by dropping the part $[E\_{\rho\_{\pi\_H}} \log D(s,a) + E\_{\rho\_{\pi\_E}} (1 - \log D(s,a))]$, we introduce the risk of interpreting expert demonstrations in myopic ways.
+
+
+## Reference
+
+Ziebart, B. D. (2010). Modeling purposeful adaptive behavior with the principle of maximum causal entropy. PhD thesis, Carnegie Mellon University.
+
+Finn, C., Christiano, P., Abbeel, P., & Levine, S. (2016). A connection between generative adversarial networks, inverse reinforcement learning, and energy-based models. arXiv preprint arXiv:1611.03852.
+
+Ho, J., & Ermon, S. (2016). Generative adversarial imitation learning. In Advances in Neural Information Processing Systems (pp. 4565-4573).
+
+Fu, J., Luo, K., & Levine, S. (2017). Learning Robust Rewards with Adversarial Inverse Reinforcement Learning. arXiv preprint arXiv:1710.11248.

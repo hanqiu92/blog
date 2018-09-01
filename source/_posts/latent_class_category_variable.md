@@ -2,8 +2,7 @@
 title: 'Case Study: Latent Classes in Quebec Energy consumption'
 categories: Case Study
 tags:
-- Discrete Choice Model
-- Inference
+- Behavior Modeling
 mathjax: true
 date: 2016-11-06 00:00:00
 ---
