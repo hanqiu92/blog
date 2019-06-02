@@ -2,8 +2,8 @@
 title: 'Case Study: Delay in Mexico City'
 categories: Case Study
 tags:
-- Traffic Flow
 - Queuing Theory
+- Stochastic Process
 mathjax: true
 date: 2016-10-23 00:00:00
 ---
@@ -18,7 +18,7 @@ Here is the actual experience: we were in a taxi going to airport via Cto. Inter
 
 ![mexico city map](/images/mexico_city_map.png)
 
-During the trip, Google Maps kept refreshing the estimated travel time, and the estimated delay for going through those bottlenecks were always increasing. When we arrived, we cost nearly one more hour than the initial estimated travel time.   
+During the trip, Google Maps kept refreshing the estimated travel time, and the estimated delay for going through those bottlenecks were always increasing. When we arrived, we cost nearly one more hour than the initial estimated travel time.
 
 So how can Google Maps be such inaccurate? And if provided with the information that the capacity in these points will be low for several hours, can we have better estimates?
 

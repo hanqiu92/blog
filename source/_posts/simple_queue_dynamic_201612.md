@@ -1,9 +1,9 @@
 ---
 title: 'Reflection on Simple Queues'
-categories: Lecture Notes
+categories: Reflection
 tags:
-- Traffic Flow
 - Queuing Theory
+- Stochastic Process
 mathjax: true
 date: 2016-12-17 12:00:00
 ---
