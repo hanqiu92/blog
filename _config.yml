@@ -9,13 +9,13 @@ description:
 author: Han Qiu
 language: en
 timezone: America/New_York
-avatar: /images/pics/1.JPG
+# avatar: /blog/images/pics/1.JPG
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://hanqiu92.github.io
-root: /
-permalink: :year/:month/:day/:title/
+url: http://hanqiu92.github.io/blog
+root: /blog/
+permalink: :title/
 permalink_defaults:
 
 # Directory
