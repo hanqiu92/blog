@@ -51,7 +51,7 @@ In the second example, let us consider the operator's dispatch decisions for dri
 
 Bob receives the dispatch request. According to his past experience at the airport, the queueing time at the airport is usually long, and a large percentage of the requests from the airport have destinations near his current location. If this happens again, he will earn less compared to stay in the current location. Of course, he also knows that he might be assigned a trip with long distances and high incomes at the airport; but he is not able to calculate the accurate probability of such events.
 
-**Question:** Suppose Bob is risk0averse. How will he respond to the dispatch request? If Bob is risk-neutral, but has to rely on his personal experience in the past for decisions, what will happen? Finally, what incentives can Alice use to increase Bob's probability of accepting the dispatch request without increasing the expected cost of incentives?
+**Question:** Suppose Bob is risk-averse. How will he respond to the dispatch request? If Bob is risk-neutral, but has to rely on his personal experience in the past for decisions, what will happen? Finally, what incentives can Alice use to increase Bob's probability of accepting the dispatch request without increasing the expected cost of incentives?
 
 
 ## Personalized Choice Problem
@@ -62,7 +62,7 @@ Deterministic choices from finite sets are generally referred to as SOS1 (specia
 
 $$\sum\_j x\_{ij} = 1, \\ x\_{ij} \in \\{0,1\\}. \tag{2.1}$$
 
-In equation (2.1), the decision variable $x\_{ij}$ indicates whether the operator should recommend option $j$ to user $i$. I have discussed this type of constraints in details in [one of my previous posts](https://hanqiu92.github.io/blog/2016/IP3_201610/). However, in many real-world applications, deterministic decisions are not required because the operator does not need constraints other than the regular ones $\sum\_j x\_{ij} = 1$ to hold in the ex-post sense. For example, suppose the operator wants to control the budget of one resource by the amount $c\_0$: $\sum\_{ij} x\_{ij}c\_{ij}\leq c\_0$, but she faces the same kind of decisions every day during a very long period (say, one month) and she only need to control the total budget. In this case, it is fine to relax the integer program to a linear program and consider stochastic decisions. Moreover, in situations that explorations are encouraged, stochastic decisions are preferred because they have less entropy. Therefore, in the following discussion, I will focus on stochastic decisions and linear programs.
+In equation (2.1), the decision variable $x\_{ij}$ indicates whether the operator should recommend option $j$ to user $i$. I have discussed this type of constraints in details in [one of my previous posts](https://hanqiu92.github.io/blogs/2016/IP3_201610/). However, in many real-world applications, deterministic decisions are not required because the operator does not need constraints other than the regular ones $\sum\_j x\_{ij} = 1$ to hold in the ex-post sense. For example, suppose the operator wants to control the budget of one resource by the amount $c\_0$: $\sum\_{ij} x\_{ij}c\_{ij}\leq c\_0$, but she faces the same kind of decisions every day during a very long period (say, one month) and she only need to control the total budget. In this case, it is fine to relax the integer program to a linear program and consider stochastic decisions. Moreover, in situations that explorations are encouraged, stochastic decisions are preferred because they have less entropy. Therefore, in the following discussion, I will focus on stochastic decisions and linear programs.
 
 Now, let us start with a very simple case: we want to maximize our total gain $r$ while satisfying budget constraints on $K$ independent resources $c^{k}$:
 
@@ -86,7 +86,7 @@ $$x' = e^z\cdot x, z\sim N(0,0.1).$$
 
 The following figure shows the simulation results averaged over 20 runs; it is shown that the dual approach (2.3), which corresponds the data point above the tick "all", is not robust to estimation noises (with a $2\%$ loss compared with the background optimal solution).
 
-<img width=500 src="/blog/images/yearly_summaries/opt_result_201906.png">
+<img width=500 src="/blogs/images/yearly_summaries/opt_result_201906.png">
 
 A simple way to improve the robustness of approach (2.3) is to do clustering. As an illustration, in the same simulation experiment, I first apply PCA to map the $(r\_i,c\_i)$ tuple for each user $i$ into a three-dimensional vector, and then apply k-means clustering to map the users into $N\_G$ groups, where $N\_G \in \\{10,50,100,500,1000,5000\\}$. In the same figure above, we can see that by selecting an appropriate $N\_G$ (in our case, $N\_G = 500$), we can do slightly better than the direct dual approach. (**Remark:** one should notice that this quantitative result on $N\_G$ is case-dependent; for example, one can investigate what would happen if the estimations of costs $c$ are much less noisy, e.g., with a $\sim 1\%$ perturbation.)
 
