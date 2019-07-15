@@ -1,5 +1,5 @@
 ---
-title: 'Case Study: Latent Classes in Quebec Energy consumption'
+title: 'Case Study: Latent Classes in Quebec Energy Consumption'
 categories: Case Study
 tags:
 - Behavior Modeling
