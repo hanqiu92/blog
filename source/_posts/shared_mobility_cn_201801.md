@@ -1,6 +1,6 @@
 ---
 title: '关于共享出行'
-categories: Reflection
+categories: Comment
 tags:
 - Shared Mobility
 mathjax: true
