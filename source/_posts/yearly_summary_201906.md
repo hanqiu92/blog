@@ -1,5 +1,5 @@
 ---
-title:       "What I've Learned in the Past Year (2018-19)"
+title:       "Yearly Summary (2018-19)"
 categories: Reflection
 tags:
 - Shared Mobility
