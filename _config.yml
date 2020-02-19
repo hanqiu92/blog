@@ -50,6 +50,8 @@ math:
   mathjax:
     src: custom_mathjax_source
     config:
+      tex:
+        tags: 'ams'
       # MathJax config
   katex:
     css: custom_css_source
