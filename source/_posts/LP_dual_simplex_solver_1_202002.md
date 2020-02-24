@@ -21,7 +21,7 @@ date:        2020-02-15 00:00:00
 
 基于上述动机的优先级，在本系列的写作/代码中，我将更注重**直观性(intuition)**和**可读性**，而选择性地忽略一些目前主流求解器中必备的、但与对偶单纯形法本身关系不大的计算优化技术。（还有一个主要的原因是这些技术都具有一定的技术壁垒，个人实现的时间成本较高。）
 
-在本系列的写作中，我所用到的参考资料包括A. Koberstein的博士毕业论文和相关引用文献，以及开源求解器CLP、SoPlex的代码。要顺畅地理解本系列中的内容，阅读者需要对线性规划理论有一定的了解。
+在本系列的写作中，我所用到的参考资料包括A. Koberstein的[博士论文](https://www.researchgate.net/profile/Achim_Koberstein/publication/35632487_The_dual_simplex_method_techniques_for_a_fast_and_stable_implementation_Elektronische_Ressource/links/0a85e52ef5144e9031000000/The-dual-simplex-method-techniques-for-a-fast-and-stable-implementation-Elektronische-Ressource.pdf)和相关引用文献，以及开源求解器[Clp](https://github.com/coin-or/Clp)、[SoPlex](http://soplex.zib.de/)的代码。要顺畅地理解本系列中的内容，阅读者需要对线性规划理论有一定的了解。
 
 ## 写作方式 Format
 
@@ -81,7 +81,7 @@ $$
 容易看出，KKT条件$\eqref{eq:KKT}$包括原始和对偶问题的可行性条件，以及互补松弛条件
 $$s_u(x - u) = 0, \ s_l(x - l) = 0. \label{eq:compSlack}\tag{1.4}$$
 
-**基(basis)的定义。**在单纯形法中，一个基本的概念是基。不妨假设原始问题的可行域$\mathcal{A}=\\{Ax = b,l \leq x \leq u\\}$是一个多面体。从几何的角度分析我们可知，原始问题$\eqref{eq:primal}$至少有一个最优解对应着多面体$\mathcal{A}$的顶点。因此，要求解原始问题的最优解，只需要找出多面体$\mathcal{A}$所有顶点中最优的一个即可。而根据线性代数知识，$\mathcal{A}$中的任意一个顶点都可以用一组基$(B,L,U)$表示：$x\_L = l\_L, x\_U = u\_U, x\_B = A\_B^{-1}(b - A\_Lx\_L - A\_Ux\_U)$，其中$B,L,U$为下标集合$\\{1,2,\cdots,m\\}$的一个分割。因此，对最优顶点的搜索可以转化为对最优基$(B,L,U)$的搜索。单纯形法的基本思路就是采用局部搜索的方式来求解最优基；原始单纯形法和对偶单纯形法的主要区别在于是在原始问题还是在对偶问题的可行域内进行局部搜索。
+**基(basis)的定义。**在单纯形法中，一个基本的概念是基。不妨假设原始问题的可行域$\mathcal{A}=\\{Ax = b,l \leq x \leq u\\}$是一个多面体。从几何的角度分析我们可知，原始问题$\eqref{eq:primal}$至少有一个最优解对应着多面体$\mathcal{A}$的顶点。因此，要求解原始问题的最优解，只需要找出多面体$\mathcal{A}$所有顶点中最优的一个即可。而根据线性代数知识，$\mathcal{A}$中的任意一个顶点都可以用一组（广义）基$(B,L,U)$表示：$x\_L = l\_L, x\_U = u\_U, x\_B = A\_B^{-1}(b - A\_Lx\_L - A\_Ux\_U)$，其中$B,L,U$为下标集合$\\{1,2,\cdots,m\\}$的一个分割。（**注：在一般的讨论中，基仅指集合$B$。在本系列中，我称$B$为狭义基。**）因此，对最优顶点的搜索可以转化为对最优基$(B,L,U)$的搜索。单纯形法的基本思路就是采用局部搜索的方式来求解最优基；原始单纯形法和对偶单纯形法的主要区别在于是在原始问题还是在对偶问题的可行域内进行局部搜索。
 
 **基于基的解。**在给定一组基$(B,L,U)$时，利用互补松弛条件$\eqref{eq:compSlack}$，KKT条件$\eqref{eq:KKT}$可以改写为
 $$
