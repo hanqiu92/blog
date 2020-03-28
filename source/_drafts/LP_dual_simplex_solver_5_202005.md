@@ -32,7 +32,7 @@ $$x_B = A_B^{-1}(b - A_L l_L - A_U u_U).$$
 * 否则，存在不可行的变量$x_j > u_j$或者$x_j < l_j$。此时，先选取其中一个$j$（pricing阶段），然后沿着一个方向缩减不可行性$\delta_j = \max(x_j - u_j,l_j - x_j)$，直到遇到另一个立方体表面为止（ratio test阶段）。如果进一步使用了BFRT技术，则在缩减不可行性的阶段可以多次调整方向，螺旋式地逼近可行域，直到不能前进为止。容易看出停止的位置对应一组新的基$(B,L,U)$。
 
 在pricing和ratio test这两个选择决策阶段中，使用不同的技术能够显著影响DS迭代过程的次数，但可能会带来计算上的成本：
-1. 在pricing阶段中，相比简单地选用不可行指标$\delta_j$最大的变量（Dantzig规则），DSE方法能够大幅降低迭代次数，但是需要增加一定的计算量来维护DSE的权重。
+1. 在pricing阶段中，相比简单地选用不可行指标$\delta_j$最大的变量（Dantzig规则），DSE方法能够大幅降低迭代次数，但是需要增加一定的计算量来维护DSE的权重；可以进一步通过随机采样一部分变量的方式来平衡迭代效率和计算效率。
 2. 在ratio test阶段中，使用Harris RT能够避开一些数值不稳定的pivot从而降低迭代次数，但可能会引入一定的对偶不可行程度（dual infeasibility），从而对整体的数值误差控制提出了新的要求。
 
 因此，在DS算法的实现中，往往需要对算法效率（迭代次数）、计算效率（计算量）、计算精度三者进行权衡。不过，我们还可以通过预处理、改进线性方程$Ax=b$求解效率等方式，全面提升DS算法的效率和精度。
@@ -67,7 +67,7 @@ $$x_B = A_B^{-1}(b - A_L l_L - A_U u_U).$$
 1. 线性方程求解的常用思路是做LU分解。对于稠密矩阵，LU分解的算法已经非常成熟；但是LP问题的输入矩阵$A$一般很稀疏。通过分析和利用稀疏性，LU分解的效率可以显著提升。事实上，本系列的实现中调用了一些线性方程求解器，这些求解器内部实现了多种复杂的利用稀疏性的算法。由于该领域目前仍不断有新的算法的提出，这些求解器在不断地优化，个人去做线性方程求解的优化似乎效率较低。然而，在LP求解中调用外部的线性方程求解器可能会有一些内存甚至是IO上的额外开销，从而削弱了外部求解器的优势。同时，单纯形法中的重要一步是对LU分解结果的更新，而这一步似乎是LP问题独有的，目前我没有发现有通用线性方程求解器对这一步提供支持。这显著地降低了外部求解器的吸引力。
 2. 通过本系列中的尝试，我们可以充分地认识到数值误差的控制流设计对于求解器稳健性和求解效率的重要性。特别地，对于PILOT系列等数值不稳定的问题，不同的控制流设计会导致求解效率有数量级的差异。在本系列的实现中，基本上完全通过对问题进行扰动实现误差控制；而实际上，在很多步骤中，我们可以结合数值误差产生的原因设计更高效的误差控制手段。当然，对这些特定场景下的控制方案进行统一管理并不是一件简单的事情。
 
-要进一步提高求解器的效果，开发者可以参考已有的开源工作。在本系列的实现中，我参考了[Clp](https://github.com/coin-or/Clp)和[SoPlex](http://soplex.zib.de/)的代码，下面简单归纳一些基础认知。Clp的实现与A. Koberstein的[博士论文](https://www.researchgate.net/profile/Achim_Koberstein/publication/35632487_The_dual_simplex_method_techniques_for_a_fast_and_stable_implementation_Elektronische_Ressource/links/0a85e52ef5144e9031000000/The-dual-simplex-method-techniques-for-a-fast-and-stable-implementation-Elektronische-Ressource.pdf)的差别不是很大，但是引入了较精细的误差控制流程。一个主要的算法层面的区别是Clp没有进行第一/二阶段的区分，而是通过设置虚拟的上下界来保证对偶解可行性，然后动态地对这些虚拟的上下界进行管理，在必要的时候扩大这些虚拟上下界，直到对应的变量离开该界为止。虽然Koberstein的论文中提到这种方法，但是他没有选用，也没有做数值实验进行对比，可能是这种方案的效果强依赖与一些参数，而调参比较困难。Clp虽然求解效率很高，但是代码注释写得不够清楚。相比之下，SoPlex代码注释写得很好，阅读体验显著提升。在算法实现方面，相比Clp，SoPlex主要有以下两点区别：
+要进一步提高求解器的效果，开发者可以参考已有的开源工作。在本系列的实现中，我参考了[Clp](https://github.com/coin-or/Clp)和[SoPlex](http://soplex.zib.de/)的代码，下面简单归纳一些基础认知。Clp的实现与A. Koberstein的[博士论文](https://www.researchgate.net/profile/Achim_Koberstein/publication/35632487_The_dual_simplex_method_techniques_for_a_fast_and_stable_implementation_Elektronische_Ressource/links/0a85e52ef5144e9031000000/The-dual-simplex-method-techniques-for-a-fast-and-stable-implementation-Elektronische-Ressource.pdf)中的描述的差别不是很大，但是引入了较精细的误差控制流程。一个主要的算法层面的区别是Clp没有进行第一/二阶段的区分，而是通过设置虚拟的上下界来保证对偶解可行性，然后动态地对这些虚拟的上下界进行管理，在必要的时候扩大这些虚拟上下界，直到对应的变量离开该界为止。虽然Koberstein的论文中提到这种方法，但是他没有选用，也没有做数值实验进行对比，可能是这种方案的效果强依赖与一些参数，而调参比较困难。Clp虽然求解效率很高，但是代码注释写得不够清楚。相比之下，SoPlex代码注释写得很好，阅读体验显著提升。在算法实现方面，相比Clp，SoPlex主要有以下两点区别：
 1. DSE阶段没做采样优化效率；
 2. 在BFRT阶段找对偶步长的时候使用排序循环，而不是像Clp一样用二分法；同时也没有加入Harris RT的元素来对数值误差进行处理。
 
