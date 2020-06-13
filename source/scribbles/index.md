@@ -10,7 +10,7 @@ date: 2020-01-01 12:00:00
 
 (19/11/20) 仿真是一种成本较高的建模方式，因此在进行仿真时也需要考虑建模中的核心权衡：应该考虑哪些要素、抛弃哪些要素？
 
-(19/12/08) batching的作用：在供需都在平面上均匀分布时，可以降低pickup distance；但如果需求为单点，则batching不能降低pickup distance。
+(19/12/08) batching的作用：在供需都在平面上均匀分布时，可以降低pickup distance；但如果需求为单点，则batching不能降低pickup distance。(20/05/30) 这意味着规模收益需要通过车辆deadheading实现，存在tradeoff！
 
 (19/12/08) model-driven：通常需要使用非线性优化校准(calibrate)，容易mis-specify；data-driven：对数据的分布有较强依赖。
 
