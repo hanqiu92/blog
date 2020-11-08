@@ -10,6 +10,12 @@ date: 2020-01-01 12:00:00
 
 (19/12/08) model-driven：通常需要使用非线性优化校准(calibrate)，容易mis-specify；data-driven：对数据的分布有较强依赖。
 (20/02/24) 建模过程中，要分析预测结果在不同context下的稳定性以及对参数的敏感度。
+(20/07/13) 很多场景中，模型内存在一些优化问题，不容易进行宏观近似；此时可以考虑通过启发式方法近似求解优化问题来节省计算开销——当然，问题是优化结果对输入数据不一定可导。
+(20/09/01) 决策行为建模思考：
+1. 对于一个确定的决策任务，给定充分的数据，机器学习模型可以很好地拟合和预测人类行为；
+2. 对于meta-task，util-max是一种较好的建模人类行为的思路；
+3. 然而，目前的技术手段很难对一个人（的所有决策行为）进行仿真模拟——需要对上述工具采取一种巧妙的平衡；可能从强化学习的应用中获取灵感
+4. general modeling heuristic可能比ad-hoc accurate model更合理。特别地，为了模拟agent决策中的heuristic所设计的方案其实也更容易被其他建模者所理解。
 
 ### Structure Design
 
@@ -22,11 +28,22 @@ date: 2020-01-01 12:00:00
 5. 如果要进一步考虑多维输出（例如，离散概率分布）上的偏序，一种简单的方式是先映射到一个全序集合（例如实数轴）上，然后作为参数映射到对应的多维空间中。例如，对于离散概率分布，可以考虑一族泊松分布，其位置参数$\lambda$是全序的。这种做法的问题是仍需手动指定输出的结构，容易mis-specify。
 6. 进一步考虑拆分real prob和subjective prob来引入optimistic因素；参考saliency theory。
 
+### Human Decision Behavior
+
+(20/10/01) 网约车用户调研：
+1. 高频基本与通勤挂钩 —— 需要通过结构化的mode choice模型判断，似乎公交的preference很低
+2. 忠诚度与体验有关 —— 稳定的体验可以保证暂时ignore other options；可通过其他app的安装特征判断是否与其他option有较强的绑定
+3. 价格敏感度与支付方式有关 —— 公司报销的相对不太敏感；高价车型部分反映供给紧张情况
+4. 其他 —— 乘客希望有自定义偏好设定；对于福利主要关注应答时间；新司机由于业务不熟练，提供的体验更差
+
 ## Inference
 
 ### Machine Learning
 
 (20/07/04) 树/SVM等基于分类的模型是以split为核心（桶内数据点直接平均作为预测值），复杂度与桶数量有关；boosting进一步提供了高效交叉分桶的方式。LR/NN等基于回归的模型是以fit为核心（每个数据点贡献自己的loss影响整体模型），复杂度与模型参数有关。**问题：**是否从duality角度存在优化空间？例如，adaptive complexity/model selection？
+(20/10/04) split（VC维）与fit的一个区别在于，前者类似于分析学中的simple function，后者则类似于逼近理论中的FFT、小波等。对于split，表示复杂度 = 模型复杂度 * 局部定义数；特别地，如果原数据有复杂的非线性，那么局部线性需要定义非常多局部
+
+(20/10/07) 一种可能的model-driven和data-driven的结合方式是根据拟合误差动态选取模型。例如，在treatment effect estimation中，基准值用data-driven，而增量用model-driven。
 
 ### Causal Inference
 
@@ -35,6 +52,16 @@ date: 2020-01-01 12:00:00
 (20/07/01) PSM是一种常用方法，但是效果相当于做complete random实验而不是block random实验，因此当达到了full random效果后，随着过滤样本数增大（差异评估阈值下降）时，使用PSM反而增加了数据集之间（在特征层面上）的差异，因为样本量下降了。相反，直接对特征维度进行matching可以直接刻画数据集间的差异。（但是在数据量充分的情况下这种现象不太可能发生）
 (20/07/01) generalized random forest: RF可以看成是非参生成局部相似性度量的方法，因此可以通过设计RF split和fit的优化目标来解决不同的task。理论分析所用到的技术不清楚。
 (20/07/01) dragonnet: 用propensity score来估计ATE，可以降低估计方差，但是牺牲了个人维度属性，个性化估计会有偏
+(20/07/11) IPM：类似于正则化，限制中间特征的差异性，强化treatment的作用；但是后续步骤的计算需要足够简单，否则模型可以hack ipm。
+(20/10/11) 多重treatment估计思路：
+    基准估计角度：声明一个局部影响结构，然后基于基准值上的误差去拟合该结构的参数
+    增量估计角度：直接对增量进行拟合
+        causal tree：split的角度，每个切分区域估计该区域内的平均增量
+        causal nn：fit的角度，通过权重分布将单点估计转化为整体加权估计，然后利用分部积分进行转化。实际应用可能比较tricky。
+
+### Other Data Mining
+
+(20/10/01) 宏观时序分析的缺点：如果外部存在持续影响因素，那么在评估一个shock的效果时置信度和时效性存在trade-off
 
 ## Decision & Optimization
 
@@ -46,6 +73,8 @@ date: 2020-01-01 12:00:00
 1. 输入模型的准确度、决策的敏感度评估非常重要
 2. 对一个具体问题，先明确关键结构和核心变量，尽快建立从核心变量到决策的映射。业务直觉的建立与持续迭代很重要。
 3. 决策影响面越大，越需要谨慎，引入更仔细的仿真评估和灵敏度分析。
+
+(20/10/02) perception - decision - execution框架更多是人机交互的逻辑，可以extend到更多场景中
 
 ### Integer Programming & Combinatorial Optimization
 
@@ -71,6 +100,11 @@ date: 2020-01-01 12:00:00
         step 2: (rr) 选一个free row i, 算出两个最小的slack和对应的边，并令i_b离开B，将这两条边加入B，对应最小slack的col j的一条边离开B。（等于是B的2换2操作，而且通过augment可以进一步降低i_b）
         step 3: (ag) 选一个free row i，找shortest path，path上的都进入B。  
 
+(20/10/06) 内点法和单纯形法的比较：
+内点法：几何角度，完全从可行域内部出发，迭代时不仅需要注意优化，还需要注意不要离边界太近，否则后续很难离开边界。
+单纯形法：组合+几何角度，完全从顶点出发；这导致只在少数场景，例如LP中可以使用
+(20/10/06) matriod和submodular的概念可以帮助理解为何简单的greedy+rounding能取得较好的效果
+
 ### Robust Optimization
 
 (20/01/01) 
@@ -81,6 +115,14 @@ date: 2020-01-01 12:00:00
 5. Adaptive opt: 忽略state、action对后续state的影响，直接考虑后续state的uncertainty。更加适用于长周期的宏观决策(例如电网控制)，而非前后state强相关的高频场景
 6. 近期一些adversial的尝试可能能达到好的robust效果；但是在某些场景中过分robust=无效？是否需要对robust进行重定义？
 7. 可以使用matching+local weighting（knn+cart）来缓解personalized decision对特征的不稳定问题。
+
+### Exploration & Exploitation
+
+(20/10/01) (neal 18) 在传统的bias-var tradeoff之上，需要考虑优化达不到opt的误差，即prediction error = bias + sample var + opt var; 这里面的insight是，如果over parametrize (param > data)，则因为高维空间中球的几何形态很扁，随机初始值的差异很小，从而opt var会下降并接近于忽略不计。
+
+(20/10/05) 在复杂函数的bandit分析中，需要用到reward function所处的函数空间的维度来评估一处样本的信息量对函数整体的估计准确度的影响。此时需要一些通用的维度定义。其中，可以考虑
+1. eluder dimension: 一种函数空间连续性的维度评估，可以用在任意函数空间中
+2. state-action matrix rank
 
 ## Transportation & Urban Studies
 
