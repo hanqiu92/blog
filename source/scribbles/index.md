@@ -17,6 +17,8 @@ date: 2020-01-01 12:00:00
 3. 然而，目前的技术手段很难对一个人（的所有决策行为）进行仿真模拟——需要对上述工具采取一种巧妙的平衡；可能从强化学习的应用中获取灵感
 4. general modeling heuristic可能比ad-hoc accurate model更合理。特别地，为了模拟agent决策中的heuristic所设计的方案其实也更容易被其他建模者所理解。
 
+(20/12/31) recommendation影响的是attention，而不是choice
+
 ### Structure Design
 
 (19/10/11) 图卷积网络(GCN)较适用于建模局部动力系统，似乎不太适用于端到端直接预测。
@@ -58,10 +60,13 @@ date: 2020-01-01 12:00:00
     增量估计角度：直接对增量进行拟合
         causal tree：split的角度，每个切分区域估计该区域内的平均增量
         causal nn：fit的角度，通过权重分布将单点估计转化为整体加权估计，然后利用分部积分进行转化。实际应用可能比较tricky。
+(20/12/31) 在多treatment场景中，做单treatment的实验结果分析会有什么效率损失？噪声更大，实验结果置信度下降
 
-### Other Data Mining
+### Time Series
 
 (20/10/01) 宏观时序分析的缺点：如果外部存在持续影响因素，那么在评估一个shock的效果时置信度和时效性存在trade-off
+(20/12/31) 通过观察bias和loss随时间的演化，可以一定程度上判断系统的非平稳性。
+(20/12/31) 时间序列中，对之前时间段信息的利用可以通过多种时间粒度（小时、天、周）来提取不同层次的信息。在此之上，通过引入时间段的encoding特征，可以使用attention来自动化地根据不同场景（例如是否节假日）选取适当的建模信息。
 
 ## Decision & Optimization
 
@@ -75,6 +80,11 @@ date: 2020-01-01 12:00:00
 3. 决策影响面越大，越需要谨慎，引入更仔细的仿真评估和灵敏度分析。
 
 (20/10/02) perception - decision - execution框架更多是人机交互的逻辑，可以extend到更多场景中
+(20/12/31) modeling方法类似于meta-learning，通过抽象获取更普适的认知，然后应用在更多领域
+
+(20/12/31) random action的优点:
+1. 增加噪声，降低自身的exploitability，同时保持对方的attention
+2. 增加从对方的反馈行为中能获取的信息量
 
 ### Integer Programming & Combinatorial Optimization
 
@@ -172,3 +182,13 @@ date: 2020-01-01 12:00:00
 1. 对于空间问题，在值域逼近的话用有限差分(FDM)；在函数域逼近则用有限元(FEM)或者谱分解。
 2. 如果有时间上的演化，则可将实数域上的PDE转化为函数域上(关于时间)的ODE。ODE中，每个无穷小时间片的演化对应一个函数域上的变换算子$A$，该算子在时间$t$的演化下组成算子半群$\\{e^{tA}\\}_t$。进而可以通过算子半群理论对算法的收敛性进行分析。
 3. 对SPDE，需要掌握大规模随机采样的方式，特别是如何高效率对BM/brownian sheet进行采样。一种方式是通过circulant embedding+FFT进行精确采样。另一种方式是用Karhunen–Loève分解目标过程，然后分别采样来逼近。
+
+## Paper Notes
+
+* 1912.05500: 通过extrinsic reward -> intrinsic reward -> policy, 能够更好地在非平稳环境中迭代策略
+* 2011.06118: 在拟合choice行为时，通过局部扰动生成候选选项，而不是考虑全部选项，类似于在决策前增加一层attention
+* 1908.09874: 对于类别特征的encoding，使用该类别的连续特征均值，或者给定联系特征、样本属于该类别的条件概率，相比于使用one-hot要更高效。
+* 2006.13570: 通过对不同的超参数（学习率、dropout率等）进行smart的deep-ensemble，可以得到hyper-deep-ensemble，进而增加预测的diversity。问题：这些工作是否真正地捕捉了模型的uncertainty？
+* 2006.08063: 在VAE等概率建模中，对于普通离散分布，一种重参数近似方式是gumbel-softmax；这一工作将该方法延拓到对复杂组合对象的分布上。具体来说是先仿照gumbel-max构建优化问题，然后考虑convex relaxation做近似。
+* 2010.06610: 文章指出，直接multi-head很难产生具有差异化的预测结果。但是为什么MIMO就能work？
+* [preference learning along multiple criteria](https://papers.nips.cc/paper/2020/file/52f4691a4de70b3c441bca6c546979d9-Paper.pdf): 很多决策问题，有多个维度的偏好，此时优化问题可以formulate成一个approachbility的问题，min max与target set之间的距离；这一问题是凸、但非线性的，因此和一维偏好上的min max有一定差异。
