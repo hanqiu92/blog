@@ -1,5 +1,5 @@
 ---
-title: '一些认知迭代'
+title: '认知迭代整理（2019）'
 categories: Comment
 tags:
 - Shared Mobility

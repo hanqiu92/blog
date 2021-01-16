@@ -8,8 +8,7 @@ date: 2020-01-01 12:00:00
 
 ### Methodology
 
-(19/12/08) model-driven：通常需要使用非线性优化校准(calibrate)，容易mis-specify；data-driven：对数据的分布有较强依赖。
-(20/02/24) 建模过程中，要分析预测结果在不同context下的稳定性以及对参数的敏感度。
+(20/02/24) 建模过程中，要记得分析预测结果在不同context下的稳定性以及对参数的敏感度。
 (20/07/13) 很多场景中，模型内存在一些优化问题，不容易进行宏观近似；此时可以考虑通过启发式方法近似求解优化问题来节省计算开销——当然，问题是优化结果对输入数据不一定可导。
 (20/09/01) 决策行为建模思考：
 1. 对于一个确定的决策任务，给定充分的数据，机器学习模型可以很好地拟合和预测人类行为；
@@ -45,21 +44,12 @@ date: 2020-01-01 12:00:00
 (20/07/04) 树/SVM等基于分类的模型是以split为核心（桶内数据点直接平均作为预测值），复杂度与桶数量有关；boosting进一步提供了高效交叉分桶的方式。LR/NN等基于回归的模型是以fit为核心（每个数据点贡献自己的loss影响整体模型），复杂度与模型参数有关。**问题：**是否从duality角度存在优化空间？例如，adaptive complexity/model selection？
 (20/10/04) split（VC维）与fit的一个区别在于，前者类似于分析学中的simple function，后者则类似于逼近理论中的FFT、小波等。对于split，表示复杂度 = 模型复杂度 * 局部定义数；特别地，如果原数据有复杂的非线性，那么局部线性需要定义非常多局部
 
-(20/10/07) 一种可能的model-driven和data-driven的结合方式是根据拟合误差动态选取模型。例如，在treatment effect estimation中，基准值用data-driven，而增量用model-driven。
-
 ### Causal Inference
 
 (20/01/01) 反事实(counterfactual)误差分析的套路是将$l(y_1-y_2,\hat{y}_1-\hat{y}_2)$拆分为$l(y_1,\hat{y}_1)$和$l(y_2,\hat{y}_2)$，再通过原有模型误差分析套路生成bound。主要区别在于需要分析决策倾向性(propensity score) $p(a|s)$对于样本分布的影响。
-(20/07/01) treatment effect: 如果r(s,a)中a是连续的，而且数据量足够大，那么对于每个s，对a的局部变化的影响的刻画是可接受的；否则，需要对样本关于s维度进行匹配，以让模型更好地捕捉a的影响。匹配方式可以考虑knn，PSM，随机森林等方法。
 (20/07/01) PSM是一种常用方法，但是效果相当于做complete random实验而不是block random实验，因此当达到了full random效果后，随着过滤样本数增大（差异评估阈值下降）时，使用PSM反而增加了数据集之间（在特征层面上）的差异，因为样本量下降了。相反，直接对特征维度进行matching可以直接刻画数据集间的差异。（但是在数据量充分的情况下这种现象不太可能发生）
-(20/07/01) generalized random forest: RF可以看成是非参生成局部相似性度量的方法，因此可以通过设计RF split和fit的优化目标来解决不同的task。理论分析所用到的技术不清楚。
 (20/07/01) dragonnet: 用propensity score来估计ATE，可以降低估计方差，但是牺牲了个人维度属性，个性化估计会有偏
-(20/07/11) IPM：类似于正则化，限制中间特征的差异性，强化treatment的作用；但是后续步骤的计算需要足够简单，否则模型可以hack ipm。
-(20/10/11) 多重treatment估计思路：
-    基准估计角度：声明一个局部影响结构，然后基于基准值上的误差去拟合该结构的参数
-    增量估计角度：直接对增量进行拟合
-        causal tree：split的角度，每个切分区域估计该区域内的平均增量
-        causal nn：fit的角度，通过权重分布将单点估计转化为整体加权估计，然后利用分部积分进行转化。实际应用可能比较tricky。
+(20/10/11) causal nn：fit的角度，通过权重分布将单点估计转化为整体加权估计，然后利用分部积分进行转化。实际应用可能比较tricky。
 (20/12/31) 在多treatment场景中，做单treatment的实验结果分析会有什么效率损失？噪声更大，实验结果置信度下降
 
 ### Time Series
@@ -80,11 +70,14 @@ date: 2020-01-01 12:00:00
 3. 决策影响面越大，越需要谨慎，引入更仔细的仿真评估和灵敏度分析。
 
 (20/10/02) perception - decision - execution框架更多是人机交互的逻辑，可以extend到更多场景中
-(20/12/31) modeling方法类似于meta-learning，通过抽象获取更普适的认知，然后应用在更多领域
 
 (20/12/31) random action的优点:
 1. 增加噪声，降低自身的exploitability，同时保持对方的attention
 2. 增加从对方的反馈行为中能获取的信息量
+
+(21/01/10) task-specific方法存在数据利用的效率瓶颈，在数据量少的场景中较难取得好的效果。因此，一个重点的研究方向，是如何从不同任务下的数据中，归纳出可复用的决策思路（与meta-learning类似）。下面是一些可尝试的方向：
+* 通过半监督和表示学习，判断数据样本的可复用性，然后加以利用；
+* 从人类决策行为中，抽象出通用的inductive bias，然后设计相应框架。例如，模块化/stitching。
 
 ### Integer Programming & Combinatorial Optimization
 
@@ -120,15 +113,10 @@ date: 2020-01-01 12:00:00
 (20/01/01) 
 1. 若每个单独的决策重要，但是预测的confidence不够，那么可以使用局部平均的方式提高预测精度。可以使用kNN、随机森林等方法。
 2. DB提出的data-driven生成uncertainty set的思路是：假设参数服从某一分布，再通过假设检验给出分布的置信区间。个人感觉这种方式更适用于宏观决策、没有明确反馈的场景，不适用于实时控制场景。
-3. model bootstrapping很难生成可以解析的uncertainty set，还是需要人工设计->怎么处理这个gap？
-4. Xu论文中讨论的robust DP是转化为LP求解，只能处理reward不确定的情况，无法处理模型不确定的情况。
-5. Adaptive opt: 忽略state、action对后续state的影响，直接考虑后续state的uncertainty。更加适用于长周期的宏观决策(例如电网控制)，而非前后state强相关的高频场景
-6. 近期一些adversial的尝试可能能达到好的robust效果；但是在某些场景中过分robust=无效？是否需要对robust进行重定义？
-7. 可以使用matching+local weighting（knn+cart）来缓解personalized decision对特征的不稳定问题。
+3. Xu论文中讨论的robust DP是转化为LP求解，只能处理reward不确定的情况，无法处理模型不确定的情况。
+4. Adaptive opt: 忽略state、action对后续state的影响，直接考虑后续state的uncertainty。更加适用于长周期的宏观决策(例如电网控制)，而非前后state强相关的高频场景
 
 ### Exploration & Exploitation
-
-(20/10/01) (neal 18) 在传统的bias-var tradeoff之上，需要考虑优化达不到opt的误差，即prediction error = bias + sample var + opt var; 这里面的insight是，如果over parametrize (param > data)，则因为高维空间中球的几何形态很扁，随机初始值的差异很小，从而opt var会下降并接近于忽略不计。
 
 (20/10/05) 在复杂函数的bandit分析中，需要用到reward function所处的函数空间的维度来评估一处样本的信息量对函数整体的估计准确度的影响。此时需要一些通用的维度定义。其中，可以考虑
 1. eluder dimension: 一种函数空间连续性的维度评估，可以用在任意函数空间中
