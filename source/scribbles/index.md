@@ -180,3 +180,5 @@ date: 2020-01-01 12:00:00
 * 2006.08063: 在VAE等概率建模中，对于普通离散分布，一种重参数近似方式是gumbel-softmax；这一工作将该方法延拓到对复杂组合对象的分布上。具体来说是先仿照gumbel-max构建优化问题，然后考虑convex relaxation做近似。
 * 2010.06610: 文章指出，直接multi-head很难产生具有差异化的预测结果。但是为什么MIMO就能work？
 * [preference learning along multiple criteria](https://papers.nips.cc/paper/2020/file/52f4691a4de70b3c441bca6c546979d9-Paper.pdf): 很多决策问题，有多个维度的偏好，此时优化问题可以formulate成一个approachbility的问题，min max与target set之间的距离；这一问题是凸、但非线性的，因此和一维偏好上的min max有一定差异。
+* 2004.00603: CFR中的action regret推广为policy regret（称为“trigger regret”），然后再通过localize转化，形成可以局部计算的regret，进而产生相关算法。有点像在原版CFR上做的理论改进。
+* 2102.00815: 提出Bellman-Eluder dimension，作为一种结合Bellman Rank和Eluder dimension的用于评估复杂度的指标。
