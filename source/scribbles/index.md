@@ -16,7 +16,8 @@ date: 2020-01-01 12:00:00
 3. 然而，目前的技术手段很难对一个人（的所有决策行为）进行仿真模拟——需要对上述工具采取一种巧妙的平衡；可能从强化学习的应用中获取灵感
 4. general modeling heuristic可能比ad-hoc accurate model更合理。特别地，为了模拟agent决策中的heuristic所设计的方案其实也更容易被其他建模者所理解。
 
-(20/12/31) recommendation影响的是attention，而不是choice
+(20/12/31) recommendation影响的是attention，而不是choice。
+(21/04/15) IRL的一个问题在于如果样本不足，学出来的reward形式容易overfit，无法泛化到样本外的特征上。
 
 ### Structure Design
 
@@ -28,6 +29,7 @@ date: 2020-01-01 12:00:00
 4. 对于实数空间$\mathbb{R}^n$上的偏序，可以考虑二次型效用函数$u(a,s,a') = a^T G(s) a'$，然后假设DM的行为$a$服从softmax原则；容易看出此时结果效用是服从$a'$上的偏序的。
 5. 如果要进一步考虑多维输出（例如，离散概率分布）上的偏序，一种简单的方式是先映射到一个全序集合（例如实数轴）上，然后作为参数映射到对应的多维空间中。例如，对于离散概率分布，可以考虑一族泊松分布，其位置参数$\lambda$是全序的。这种做法的问题是仍需手动指定输出的结构，容易mis-specify。
 6. 进一步考虑拆分real prob和subjective prob来引入optimistic因素；参考saliency theory。
+(21/04/15) attention机制是sparse的；attention权重可以作为rl中的reward.
 
 ### Human Decision Behavior
 
@@ -36,6 +38,10 @@ date: 2020-01-01 12:00:00
 2. 忠诚度与体验有关 —— 稳定的体验可以保证暂时ignore other options；可通过其他app的安装特征判断是否与其他option有较强的绑定
 3. 价格敏感度与支付方式有关 —— 公司报销的相对不太敏感；高价车型部分反映供给紧张情况
 4. 其他 —— 乘客希望有自定义偏好设定；对于福利主要关注应答时间；新司机由于业务不熟练，提供的体验更差
+(21/04/15) 劳动经济学基础假设：
+1. 劳动者的资源禀赋包括：时间，以及周期性的固定盈余（租金等）。劳动者通过工作时长换取收入。
+2. 劳动者的效用和支出是关于消费水平和休息水平的函数。决策问题是固定效用优化支出，或者固定支出优化效用。决策问题的解也可以看成是效用无差异曲线与支出无差异曲线的切点。
+(21/04/15) 使用causal graph来分析人类决策行为的一个问题点在于，忽略了人类对于未来的推演能力（心智理论），即实际情况可能是双向因果关系。
 
 ## Inference
 
@@ -51,6 +57,19 @@ date: 2020-01-01 12:00:00
 (20/07/01) dragonnet: 用propensity score来估计ATE，可以降低估计方差，但是牺牲了个人维度属性，个性化估计会有偏
 (20/10/11) causal nn：fit的角度，通过权重分布将单点估计转化为整体加权估计，然后利用分部积分进行转化。实际应用可能比较tricky。
 (20/12/31) 在多treatment场景中，做单treatment的实验结果分析会有什么效率损失？噪声更大，实验结果置信度下降
+(21/04/15) 在估计treatment effect时，如果无法得到准确估计，可以退而求其次，根据一些正则性假设，生成上下界估计，并进行敏感度分析。
+(21/04/15) 当treatment effect较弱时，使用传统的树模型可能会导致估计的treatment effect偏向于0，因为很难产生有效的split。
+(21/04/15) 合成控制中，系数的稀疏性是一个重要性质。
+(21/04/15) 合成控制的可靠性可以通过“extended pre-intervention period”的拟合准确度评估。特别地，根据理论分析，合成控制主要适用于样本量少+趋势强/噪声弱的场景；如果样本量大+噪声大，合成控制本身可能会overfit，引入更多noise。另一方面，可进一步通过类似于重采样的方式，评估效果的显著性：如果实验元素的估计效果显著差异于对照组元素的效果分布，则置信。这种评估更多依赖人工经验，因为样本少时p-value不置信。
+(21/04/15) 通过观测数据和实验挖掘因果关系：
+* 目标：根据数据和实验，找到因果图的结构。
+* 关键假设：faithfulness，即概率分布与因果图关于随机变量条件独立的判断的一致性。基于这一假设，可以通过条件独立性推断因果图的方向，例如PC算法。若要进一步通过增量假设（例如，噪声的结构）得到更多关于因果图的结构信息，则需要对具体情况进行具体分析，没有简单结论。
+* 应用场景：医药、物理等基础研究场景；社会科学&政策研究（可能存在hidden confounder）；AGI
+(21/04/15) mediator & moderator: 在现有因果关系估计基础上，试图进一步拆解不同因果路径的影响。可以使用因果图或者结构模型进行分析。常用于基于实验设计的因果关系挖掘中。
+(21/04/15) honest做法迁移nn的思路：结构+权重拆分训练。可以与超参数的优化结合。
+* 简单方法：将模型结构切分为两部分，先用第一部分初始化全部权重，然后用第二部分数据fine-tune输出层权重。
+* general方法：一部分数据做nas或者sparse connection search，另一部分训练权重。
+(21/12/25) 当特征X维度少时，可以直接分层统计计算ATE；否则，需要通过模型简化X->y的复杂度。
 
 ### Time Series
 
@@ -96,6 +115,7 @@ date: 2020-01-01 12:00:00
         给每个node加上一个fix-value varible（该变量可以看成node与source或target相连的边）；
         KM可以看成是利用组合方法对这个extend problem做dual simplex？
         其中，"对等边找增广路径提高primal目标值"对应"令fix-value variable离开basis"；"调整dual增加等边"对应"令original variable进入basis"。
+
 (20/02/24) lapmod for bipartite matching:
 
         step 1a: (cr) 对extended formulation，令I（对应row的col）进入basis，然后在原col集合中，对每个col j选一个row（连边），col j的对偶值由该边决定。
@@ -107,6 +127,11 @@ date: 2020-01-01 12:00:00
 内点法：几何角度，完全从可行域内部出发，迭代时不仅需要注意优化，还需要注意不要离边界太近，否则后续很难离开边界。
 单纯形法：组合+几何角度，完全从顶点出发；这导致只在少数场景，例如LP中可以使用
 (20/10/06) matriod和submodular的概念可以帮助理解为何简单的greedy+rounding能取得较好的效果
+
+(21/04/15) 多目标优化方法：
+1. 序列带约束求解。该方法的一大问题是对约束的设定敏感，约束的微弱变化导致解的大幅波动。另外，目标多了以后，顺序影响很大：排在后面的目标要么优化空间小，要么大幅削弱此前的优化效果。
+2. 加权。可以利用已有解来初始化对偶变量，从而提速：先对单目标求解并存储dual变量，然后用这些变量进行加权作为初始值。
+3. 加权+约束求解兜底：从全局做加权优化，然后对违反约束的个体重新求解。加权相比序列约束更可控，故应将约束作为静态配置，加权权重作为主要控制优化点。
 
 ### Robust Optimization
 
@@ -122,6 +147,29 @@ date: 2020-01-01 12:00:00
 1. eluder dimension: 一种函数空间连续性的维度评估，可以用在任意函数空间中
 2. state-action matrix rank
 
+### Reinforcement Learning
+
+(20/12/25) self-imitation：对于random exploration中产生的好trajectory，可以将其当做expert illustration，通过BC方法来引导后续训练。
+
+### Game Theory
+
+(21/04/15) correlated equilibrium：作为nash equilibrium的扩展概念，主要差异是将决策空间从独立概率分布的乘积拓展为联合概率分布，因此允许更多均衡的存在性。
+(21/04/15) blackwell approachability: iteratively solve the minmax problem w.r.t. a projected (half-space) sub-problem, then it is guaranteed that it will converge to the set. for equilibrium, the projection happens to be "regret matching".
+(21/04/15) 在评估中，AIVAT需要遍历所有可能发生的历史，因此计算量可能很大，是否能够仅考虑部分历史？
+(21/04/15) online policy searching：可以使用alternative payoff（值估计）来进行引导，但是过度利用反而会增加了exploitability。一个有趣的观察是，抽象后，policy会变弱，但是value通常仍然很准，因此使用粗糙的value来引导精细的policy是较合理的。
+(21/05/15) Single-deep CFR：在deep CFR的基础上，通过对历史regret模型的采样来替代对平均policy模型的学习。
+(21/05/15) DREAM：在deep CFR的基础上，考虑outcome sampling以降低单次迭代的计算开销。然后，进一步通过增加模型预估的baseline来降低采样误差：使用expected SARSA，训练以下等式$Q(s(h),a) = R(h,a) + \mathbb{E}_{h'|\pi_{-i}} \sum_{a'} \pi(a'|s(h')) Q(s(h'),a')$。
+(21/05/15) 怎么做depth-limited搜索？需要对信息集$I$进行扩充，以囊括自身策略$\pi$所产生的信息量：
+* CFR-D: 增加其他agent可能处于的信息集和相应到达概率，以在求解subgame策略时，考虑其他agent的deviation动机，从而得到更robust的subgame策略；
+* ReBeL: 增加其他agent对自身策略的belief（PBS=关于隐藏信息的概率分布），从而在求解trunk策略时，考虑自身策略对其他agent的belief的影响，从而得到更robust的trunk策略。
+  * 应用ReBeL所需的先决条件：1. 实现belief与history/info set的相互转化方式；2. 实现CFR-D/CFR-AVG，用于robust求解subgame。
+(21/05/15) (deep) cfr的regret计算提效思路整理：
+1. 做多次outcome sampling rollout得到更准确的regret估计值。问题在于rollout时仍需要调用模型（生成策略），计算效率没有明显提升。
+2. 结合outcome sampling和external sampling，在浅层用OS，深层用ES，以平衡计算成本和误差。
+3. 使用类似于mcts的方式，在node处做多次有限深度搜索估计regret。问题在于如何保证模型预估与实际的Q值（受当前策略影响）是一致的。
+(21/05/20) 进化博弈论（EGT）相比于传统博弈论，更关心群体中不同策略占比的演化过程。evolutionary stable strategy（ESS）是一个与纳什均衡（NE）不完全一致的概念。
+(21/05/20) fictitious play（FP）: 每一步中，固定其他agent的策略，计算自己的最优响应策略（BR）；长期来看，这些最优响应策略的平均值（在一定条件下）收敛到NE。deep variants是用RL等方法求解最优响应策略。
+
 ## Transportation & Urban Studies
 
 (19/09/13) 城市出行中，regular需求更关注服务稳定性，而MaaS的优势虽然灵活和可定制化(也可能有更好的服务)，但无法保证稳定，因此MaaS的主要空间在于irregular需求。由于需求的高支付意愿来源于lack of alternatives，MaaS概念内部的不同mode将会形成强替代效应。
@@ -131,6 +179,7 @@ date: 2020-01-01 12:00:00
 (20/07/01) 区域/路网转换：
 * 长方形、六边形体系：用于分析，优点是计算与转换方便，便于数据聚合和展示；缺点是不能反映区域间路网的连通性
 * 路网体系：可以准确描述微观行为，缺点在于计算成本高
+(21/04/15) 城市交通新业态：热点从shared mobility到mobility service的转变，即从强调去中心化的资源共享（个体主导=C2C）回到中心化的服务上（企业主导=B2C）。
 
 ## Code Reading & Development
 
@@ -171,6 +220,19 @@ date: 2020-01-01 12:00:00
 2. 如果有时间上的演化，则可将实数域上的PDE转化为函数域上(关于时间)的ODE。ODE中，每个无穷小时间片的演化对应一个函数域上的变换算子$A$，该算子在时间$t$的演化下组成算子半群$\\{e^{tA}\\}_t$。进而可以通过算子半群理论对算法的收敛性进行分析。
 3. 对SPDE，需要掌握大规模随机采样的方式，特别是如何高效率对BM/brownian sheet进行采样。一种方式是通过circulant embedding+FFT进行精确采样。另一种方式是用Karhunen–Loève分解目标过程，然后分别采样来逼近。
 
+(21/04/15) CTM模型：
+* 基本思路：next cell inflow = min(demand = current cell density, supply1 = next cell flow capacity, supply2 = next cell jam density)
+* jam density通过backward wave speed（对应两个不同密度的流体merge时，边界移动的速度）定义，可以任意指定，也可以根据上下游流密速情况推导
+* 实践中，ctm可以很好地逼近lwr流体模型，并可进一步扩展到一般网络场景
+
+(21/04/15) CAV+V2X套路整理：
+1. 微观：CAV+V2X控制方案设计。重要综述： An overview of vehicular platoon control under the four-component framework。
+   1. 如何设计更安全和鲁棒的“分布式”跟弛行为：考虑周边车辆的信息输入，以及行驶过程中的自然扰动。通常考虑控制论方法，并分析稳定性。 -- 思考题：如果是不同标准的CAV，应该如何进行交互？
+   2. 如何设计更好的platoon控制方法：取决于路侧单元提供哪种形式的控制信号。可以用传统的控制方法做，也可以考虑RL。同样，稳定性和鲁棒性很重要。
+   3. 如何设计更高效的CAV信息交互方案：information flow topology（IFT）设计。是一个MIP问题，但是可以根据问题结构设计高效的启发式算法。
+   4. 如何设计可实时部署的控制策略：预留计算时间，提前进行计算，然后在实际控制时，根据具体情况，对控制方案进行一阶修正。     
+2. 宏观：基于CAV+V2X的混合交通流的控制
+
 ## Paper Notes
 
 * 1912.05500: 通过extrinsic reward -> intrinsic reward -> policy, 能够更好地在非平稳环境中迭代策略
@@ -181,4 +243,11 @@ date: 2020-01-01 12:00:00
 * 2010.06610: 文章指出，直接multi-head很难产生具有差异化的预测结果。但是为什么MIMO就能work？
 * [preference learning along multiple criteria](https://papers.nips.cc/paper/2020/file/52f4691a4de70b3c441bca6c546979d9-Paper.pdf): 很多决策问题，有多个维度的偏好，此时优化问题可以formulate成一个approachbility的问题，min max与target set之间的距离；这一问题是凸、但非线性的，因此和一维偏好上的min max有一定差异。
 * 2004.00603: CFR中的action regret推广为policy regret（称为“trigger regret”），然后再通过localize转化，形成可以局部计算的regret，进而产生相关算法。有点像在原版CFR上做的理论改进。
+* 2007.05864: NTKGP extends random prior with NTK info, better than random prior.
 * 2102.00815: 提出Bellman-Eluder dimension，作为一种结合Bellman Rank和Eluder dimension的用于评估复杂度的指标。
+* 2102.09488: 在information-directed sampling中，分析和比较了两种不同entropy定义所带来的影响，并根据数值实验结果，提出了一种新的regret bound理论分析框架。
+* 2102.12769: 考察了长尾reward情况下的RL理论，提出使用robust mean estimator（包括reward clipping）替代sample mean。
+* 2102.08087: 考虑连续时间optimal task acceptance问题，其中task的时长和收益未知，需要探索；作者先分析完全信息情况下的最优策略，然后基于此提出了数种predict-then-optimize算法，并分析了相应的regret bound。
+* 2103.04289: IRL with ql-k model，即对于任意reward函数，从myopic开始，多次根据opponent的当前最优策略更新自身最优策略（k层深度的优化）；然后根据相应的loss更新reward函数
+* 2110.13973: （平衡对环境复杂度的理解程度和策略的优化效果）在信息传输带宽有限的情况下，通过Blahut-Arimoto等信息论算法对未知环境的信息进行压缩，找到有限带宽下最值得关注的优化方向，能够提升单位信息密度的增量收益。
+* 2112.06054: 提出一种IRL方法，通过policy和state occupancy dist之间的联系，将学习目标转为expert state occupancy dist，而这可以通过td的方式实现。该方法的好处是不需要stationary的expert数据，要求更低（意味着可以在arbitrary init state dist下获取expert response）。
