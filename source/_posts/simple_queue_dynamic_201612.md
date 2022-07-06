@@ -15,7 +15,7 @@ This semester, when I was working on homework of 1.200, there was a frequently a
 
 Let us consider the easiest $M$/$M$/1/$k$ queue, where $k$ is a finite number. Following is a picture of the temporal transition (By Gareth Jones - [MM1_queue_state_space.png](https://commons.wikimedia.org/w/index.php?curid=17204982), CC BY-SA 3.0)
 
-![two_segments](/blogs/images/MM1_queue_state_space.png)
+![two_segments](/images/MM1_queue_state_space.png)
 
 The state transition matrix is then given by
 

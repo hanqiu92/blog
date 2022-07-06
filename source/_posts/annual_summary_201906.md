@@ -86,7 +86,7 @@ $$x' = e^z\cdot x, z\sim N(0,0.1).$$
 
 The following figure shows the simulation results averaged over 20 runs; it is shown that the dual approach (2.3), which corresponds the data point above the tick "all", is not robust to estimation noises (with a $2\%$ loss compared with the background optimal solution).
 
-<img width=500 src="/blogs/images/yearly_summaries/opt_result_201906.png">
+<img width=500 src="/images/yearly_summaries/opt_result_201906.png">
 
 A simple way to improve the robustness of approach (2.3) is to do clustering. As an illustration, in the same simulation experiment, I first apply PCA to map the $(r\_i,c\_i)$ tuple for each user $i$ into a three-dimensional vector, and then apply k-means clustering to map the users into $N\_G$ groups, where $N\_G \in \\{10,50,100,500,1000,5000\\}$. In the same figure above, we can see that by selecting an appropriate $N\_G$ (in our case, $N\_G = 500$), we can do slightly better than the direct dual approach. (**Remark:** one should notice that this quantitative result on $N\_G$ is case-dependent; for example, one can investigate what would happen if the estimations of costs $c$ are much less noisy, e.g., with a $\sim 1\%$ perturbation.)
 

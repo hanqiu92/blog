@@ -16,7 +16,7 @@ This June, when traveling in Mexico, I encountered one of the most unexpected co
 
 Here is the actual experience: we were in a taxi going to airport via Cto. Interior. We encountered a heavy rain, and several lower points were flooded (indicated as red circles in the following pic).
 
-![mexico city map](/blogs/images/mexico_city_map.png)
+![mexico city map](/images/mexico_city_map.png)
 
 During the trip, Google Maps kept refreshing the estimated travel time, and the estimated delay for going through those bottlenecks were always increasing. When we arrived, we cost nearly one more hour than the initial estimated travel time.
 
@@ -26,7 +26,7 @@ So how can Google Maps be such inaccurate? And if provided with the information 
 
 It is almost straightforward to think about a queuing model. To simplify, we consider a serial connection of M/M/1 units and free flow road segments (which can also be seen as M/M/1 unit with $\\mu\\to\\infty$). Following is a visualization of M/M/1 unit (By Tsaitgaist - [Mm1.png](https://commons.wikimedia.org/w/index.php?curid=7037566), CC BY-SA 3.0).
 
-![M/M/1](/blogs/images/mm1.png)
+![M/M/1](/images/mm1.png)
 
 With elementary understanding of queuing theory, I only considered stable case ($\\lambda < \\ mu$) at first and got into trouble. When the process become stationary, it is impossible to have increasing travel time! In this case, we are actually more likely in an unstable situation: if the capacity remains low forever, the length of the queue will surely explode.
 

@@ -23,13 +23,13 @@ If we know the whole dataset comes from a single class, the estimation is simple
 
 For example, in the Quebec energy case, we observe the following:
 
-![two_segments](/blogs/images/latent_class_1.png)
+![two_segments](/images/latent_class_1.png)
 
 There are clearly two classes. If we separate them and plot histograms of other attributes respectively, we find that for some variables the difference is quite significant, which indicating a potential market segments.
 
-![segment_1](/blogs/images/latent_class_2.png)
+![segment_1](/images/latent_class_2.png)
 
-![segment_2](/blogs/images/latent_class_3.png)
+![segment_2](/images/latent_class_3.png)
 
 So, in more general cases, how can we discover such patterns if exploration is not always feasible? Moreover, how can we make sure our segmentation will improve the model performance?
 

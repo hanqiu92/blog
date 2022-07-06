@@ -1,5 +1,5 @@
 ---
-title: 'Notes on "Judgement under Uncertainty: Heuristics and Biases"'
+title: 'Decision Behavior Note I: Probability Judgement'
 categories: Study Notes
 tags:
 - Behavior Modeling
@@ -10,7 +10,9 @@ date: 2022-06-04 00:00:00
 
 <!-- motivation -->
 
-最近，我对[Judgement under Uncertainty: Heuristics and Biases](https://www.amazon.com/Judgment-Under-Uncertainty-Heuristics-Biases/dp/0521284147)这本经典的研究人类决策行为的书籍进行了学习。在这份笔记中，我将对该书中的主要结论进行整理，并尝试从决策学习算法设计的角度进行分析解释。希望通过这些整理和分析，我们能够一方面更好地认识到人们决策行为中的局限性和相应的校正方法，另一方面为自动化决策算法的设计和优化提供新的思路。
+最近，我对一系列经典的研究人类决策行为的书籍进行了学习，并尝试从决策学习算法设计的角度进行分析解释。在下面这一系列文章中，希望通过对上述这些学习和分析进行整理，我们能够一方面更好地认识到人们决策行为中的局限性和相应的校正方法，另一方面为自动化决策算法的设计和优化提供新的思路。
+
+在这份笔记中，我将先对[Judgement under Uncertainty: Heuristics and Biases](https://www.amazon.com/Judgment-Under-Uncertainty-Heuristics-Biases/dp/0521284147)这本关注概率判断的书中的主要结论进行整理。
 
 <!--more-->
 
