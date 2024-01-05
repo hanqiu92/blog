@@ -3,6 +3,7 @@ title: '认知迭代整理（2022）'
 categories: Comment
 tags:
 - Behavior Modeling
+- Management
 mathjax: true
 date: 2023-01-25 00:00:00
 ---
